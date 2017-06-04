@@ -1,0 +1,154 @@
+*asm:
+%(target_asm_spec) %{mbig-endian:-EB} %{mlittle-endian:-EL}
+
+*asm_debug:
+%{!g0:%{gstabs*:--gstabs}%{!gstabs*:%{g*:--gdwarf2}}} %{fdebug-prefix-map=*:--debug-prefix-map %*}
+
+*asm_final:
+
+
+*asm_options:
+%{-target-help:%:print-asm-header()} %a %Y %{c:%W{o*}%{!o*:-o %w%b%O}}%{!c:-o %d%w%u%O}
+
+*invoke_as:
+%{!fwpa:   %{fcompare-debug=*|fdump-final-insns=*:%:compare-debug-dump-opt()}   %{!S:-o %|.s |
+ as %(asm_options) %m.s %A }  }
+
+*cpp:
+
+
+*cpp_options:
+%(cpp_unique_options) %1 %{m*} %{std*&ansi&trigraphs} %{W*&pedantic*} %{w} %{f*} %{g*:%{!g0:%{g*} %{!fno-working-directory:-fworking-directory}}} %{O*} %{undef} %{save-temps*:-fpch-preprocess}
+
+*cpp_debug_options:
+%{d*}
+
+*cpp_unique_options:
+%{!Q:-quiet} %{nostdinc*} %{C} %{CC} %{v} %{I*&F*} %{P} %I %{MD:-MD %{!o:%b.d}%{o*:%.d%*}} %{MMD:-MMD %{!o:%b.d}%{o*:%.d%*}} %{M} %{MM} %{MF*} %{MG} %{MP} %{MQ*} %{MT*} %{!E:%{!M:%{!MM:%{!MT:%{!MQ:%{MD|MMD:%{o*:-MQ %*}}}}}}} %{remap} %{g3|ggdb3|gstabs3|gcoff3|gxcoff3|gvms3:-dD} %{!iplugindir*:%{fplugin*:%:find-plugindir()}} %{H} %C %{D*&U*&A*} %{i*} %Z %i %{fmudflap:-D_MUDFLAP -include mf-runtime.h} %{fmudflapth:-D_MUDFLAP -D_MUDFLAPTH -include mf-runtime.h} %{E|M|MM:%W{o*}}
+
+*trad_capable_cpp:
+cc1 -E %{traditional|traditional-cpp:-traditional-cpp}
+
+*cc1:
+ %{G*} %(subtarget_cc1_spec) %{mxl-multiply-high:-mcpu=v6.00.a} 
+
+*cc1_options:
+%{pg:%{fomit-frame-pointer:%e-pg and -fomit-frame-pointer are incompatible}} %{!iplugindir*:%{fplugin*:%:find-plugindir()}} %1 %{!Q:-quiet} %{!dumpbase:-dumpbase %B} %{d*} %{m*} %{aux-info*} %{fcompare-debug-second:%:compare-debug-auxbase-opt(%b)}  %{!fcompare-debug-second:%{c|S:%{o*:-auxbase-strip %*}%{!o*:-auxbase %b}}}%{!c:%{!S:-auxbase %b}}  %{g*} %{O*} %{W*&pedantic*} %{w} %{std*&ansi&trigraphs} %{v:-version} %{pg:-p} %{p} %{f*} %{undef} %{Qn:-fno-ident} %{Qy:} %{-help:--help} %{-target-help:--target-help} %{-version:--version} %{-help=*:--help=%*} %{!fsyntax-only:%{S:%W{o*}%{!o*:-o %b.s}}} %{fsyntax-only:-o %j} %{-param*} %{fmudflap|fmudflapth:-fno-builtin -fno-merge-constants} %{coverage:-fprofile-arcs -ftest-coverage}
+
+*cc1plus:
+
+
+*link_gcc_c_sequence:
+%G %L %G
+
+*link_ssp:
+%{fstack-protector|fstack-protector-all:-lssp_nonshared -lssp}
+
+*endfile:
+crtend.o%s crtn.o%s
+
+*link:
+%{shared:-shared} -N -relax   %{mbig-endian:-EB --oformat=elf32-microblaze}   %{mlittle-endian:-EL --oformat=elf32-microblazeel}   %{Zxl-mode-xmdstub:-defsym _TEXT_START_ADDR=0x800}   %{mxl-mode-xmdstub:-defsym _TEXT_START_ADDR=0x800}   %{mxl-gp-opt:%{G*}} %{!mxl-gp-opt: -G 0}   %{!T*: -dT xilinx.ld%s}
+
+*lib:
+%{!nostdlib: %{pg:-start-group -lxilprofile -lxil -lc -lm -end-group } %{!pg:-start-group -lxil -lc -lm -end-group }} 
+
+*mfwrap:
+ %{static: %{fmudflap|fmudflapth:  --wrap=malloc --wrap=free --wrap=calloc --wrap=realloc --wrap=mmap --wrap=munmap --wrap=alloca} %{fmudflapth: --wrap=pthread_create}} %{fmudflap|fmudflapth: --wrap=main}
+
+*mflib:
+%{fmudflap|fmudflapth: -export-dynamic}
+
+*link_gomp:
+
+
+*libgcc:
+-lgcc
+
+*startfile:
+%{Zxl-mode-executable   : %(startfile_executable)  ;   mxl-mode-executable   : %(startfile_executable)  ;   Zxl-mode-xmdstub      : %(startfile_xmdstub)     ;   mxl-mode-xmdstub      : %(startfile_xmdstub)     ;   Zxl-mode-bootstrap    : %(startfile_bootstrap)   ;   mxl-mode-bootstrap    : %(startfile_bootstrap)   ;   Zxl-mode-novectors    : %(startfile_novectors)   ;   mxl-mode-novectors    : %(startfile_novectors)   ;   Zxl-mode-xilkernel    : %(startfile_xilkernel)   ;   mxl-mode-xilkernel    : %(startfile_xilkernel)   ;                         : %(startfile_default)       } %(startfile_crtinit)
+
+*cross_compile:
+1
+
+*version:
+4.6.4
+
+*multilib:
+. !mxl-barrel-shift !mno-xl-soft-mul !mxl-multiply-high !mlittle-endian;bs mxl-barrel-shift !mno-xl-soft-mul !mxl-multiply-high !mlittle-endian;m !mxl-barrel-shift mno-xl-soft-mul !mxl-multiply-high !mlittle-endian;le !mxl-barrel-shift !mno-xl-soft-mul !mxl-multiply-high mlittle-endian;m/mh !mxl-barrel-shift mno-xl-soft-mul mxl-multiply-high !mlittle-endian;m/le !mxl-barrel-shift mno-xl-soft-mul !mxl-multiply-high mlittle-endian;m/mh/le !mxl-barrel-shift mno-xl-soft-mul mxl-multiply-high mlittle-endian;bs/m mxl-barrel-shift mno-xl-soft-mul !mxl-multiply-high !mlittle-endian;bs/le mxl-barrel-shift !mno-xl-soft-mul !mxl-multiply-high mlittle-endian;bs/m/mh mxl-barrel-shift mno-xl-soft-mul mxl-multiply-high !mlittle-endian;bs/m/le mxl-barrel-shift mno-xl-soft-mul !mxl-multiply-high mlittle-endian;bs/m/mh/le mxl-barrel-shift mno-xl-soft-mul mxl-multiply-high mlittle-endian;
+
+*multilib_defaults:
+
+
+*multilib_extra:
+
+
+*multilib_matches:
+mxl-barrel-shift mxl-barrel-shift;mno-xl-soft-mul mno-xl-soft-mul;mxl-multiply-high mxl-multiply-high;mlittle-endian mlittle-endian;
+
+*multilib_exclusions:
+
+
+*multilib_options:
+mxl-barrel-shift mno-xl-soft-mul mxl-multiply-high mlittle-endian
+
+*linker:
+collect2
+
+*linker_plugin_file:
+
+
+*lto_wrapper:
+
+
+*lto_gcc:
+
+
+*link_libgcc:
+%D
+
+*md_exec_prefix:
+
+
+*md_startfile_prefix:
+
+
+*md_startfile_prefix_1:
+
+
+*startfile_prefix_spec:
+
+
+*sysroot_spec:
+--sysroot=%R
+
+*sysroot_suffix_spec:
+
+
+*sysroot_hdrs_suffix_spec:
+
+
+*target_asm_spec:
+
+
+*startfile_executable:
+crt0.o%s crti.o%s crtbegin.o%s
+
+*startfile_xmdstub:
+crt1.o%s crti.o%s crtbegin.o%s
+
+*startfile_bootstrap:
+crt2.o%s crti.o%s crtbegin.o%s
+
+*startfile_novectors:
+crt3.o%s crti.o%s crtbegin.o%s
+
+*startfile_crtinit:
+%{!pg: %{!mno-clearbss: crtinit.o%s} %{mno-clearbss: sim-crtinit.o%s}} %{pg: %{!mno-clearbss: pgcrtinit.o%s} %{mno-clearbss: sim-pgcrtinit.o%s}}
+
+*startfile_default:
+crt0.o%s crti.o%s crtbegin.o%s
+
+*link_command:
+%{!fsyntax-only:%{!c:%{!M:%{!MM:%{!E:%{!S:    %(linker)     %{fuse-linker-plugin:     -plugin %(linker_plugin_file)     -plugin-opt=%(lto_wrapper)     -plugin-opt=-fresolution=%u.res     %{!nostdlib:%{!nodefaultlibs:%:pass-through-libs(%(link_gcc_c_sequence))}}     }     %{flto|flto=*:%<fcompare-debug*}     %{flto} %{flto=*} %l %{pie:-pie} %X %{o*} %{e*} %{N} %{n} %{r}    %{s} %{t} %{u*} %{z} %{Z} %{!nostdlib:%{!nostartfiles:%S}}    %{static:} %{L*} %(mfwrap) %(link_libgcc) %o    %{fopenmp|ftree-parallelize-loops=*:%:include(libgomp.spec)%(link_gomp)}    %(mflib)  %{fsplit-stack: --wrap=pthread_create}    %{fprofile-arcs|fprofile-generate*|coverage:-lgcov}    %{!nostdlib:%{!nodefaultlibs:%(link_ssp) %(link_gcc_c_sequence)}}    %{!nostdlib:%{!nostartfiles:%E}} %{T*} }}}}}}
+
